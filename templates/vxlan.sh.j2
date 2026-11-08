@@ -1,0 +1,13 @@
+#!/bin/sh
+# Plan de données VXLAN du leaf (généré depuis NetBox)
+set -e
+sysctl -w net.ipv4.ip_forward=1
+{% for v in vnis %}
+ip link add br{{ v.vni }} type bridge
+ip link set br{{ v.vni }} up
+ip link add vxlan{{ v.vni }} type vxlan id {{ v.vni }} local {{ vtep }} dstport 4789 nolearning
+ip link set vxlan{{ v.vni }} master br{{ v.vni }}
+ip link set vxlan{{ v.vni }} up
+ip link set {{ v.access }} master br{{ v.vni }}
+ip link set {{ v.access }} up
+{% endfor %}

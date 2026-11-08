@@ -1,0 +1,39 @@
+frr defaults datacenter
+hostname {{ hostname }}
+log stdout
+service integrated-vtysh-config
+!
+interface lo
+ ip address {{ loopback }}
+!
+{% for i in interfaces %}
+interface {{ i.name }}
+ ip address {{ i.ip }}
+!
+{% endfor %}
+router bgp {{ asn }}
+ bgp router-id {{ router_id }}
+ no bgp ebgp-requires-policy
+ bgp bestpath as-path multipath-relax
+{% for n in neighbors %}
+ neighbor {{ n.ip }} remote-as {{ n.asn }}
+ neighbor {{ n.ip }} description {{ n.peer }}
+{% endfor %}
+ !
+ address-family ipv4 unicast
+  network {{ loopback }}
+  maximum-paths 4
+ exit-address-family
+ !
+ address-family l2vpn evpn
+{% for n in neighbors %}
+  neighbor {{ n.ip }} activate
+{% if role == 'spine' %}
+  neighbor {{ n.ip }} attribute-unchanged next-hop
+{% endif %}
+{% endfor %}
+{% if role == 'leaf' %}
+  advertise-all-vni
+{% endif %}
+ exit-address-family
+!
