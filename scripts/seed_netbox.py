@@ -30,6 +30,11 @@ def get_or_create(endpoint, lookup, **extra):
     return obj or endpoint.create(**lookup, **extra)
 
 
+def get_or_create_iface(nb, device, name, if_type):
+    return (nb.dcim.interfaces.get(device_id=device.id, name=name)
+            or nb.dcim.interfaces.create(device=device.id, name=name, type=if_type))
+
+
 def main():
     wait_for_netbox()
     nb = pynetbox.api(URL, token=TOKEN)
@@ -48,14 +53,14 @@ def main():
                                       device_type=dtype.id, role=roles[d["role"]].id,
                                       local_context_data=ctx or None)
         if "loopback" in d:
-            lo = get_or_create(nb.dcim.interfaces, {"device_id": devices[name].id, "name": "lo"}, type="virtual")
+            lo = get_or_create_iface(nb, devices[name], "lo", "virtual")
             get_or_create(nb.ipam.ip_addresses, {"address": d["loopback"]}, role="loopback",
                           assigned_object_type="dcim.interface", assigned_object_id=lo.id)
 
     def iface(dev, name):
         key = (dev, name)
         if key not in ifaces:
-            ifaces[key] = get_or_create(nb.dcim.interfaces, {"device_id": devices[dev].id, "name": name}, type="1000base-t")
+            ifaces[key] = get_or_create_iface(nb, devices[dev], name, "1000base-t")
         return ifaces[key]
 
     for a_dev, a_if, a_ip, b_dev, b_if, b_ip in intent["links"]:
