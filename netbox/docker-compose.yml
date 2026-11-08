@@ -1,0 +1,27 @@
+# NetBox minimal pour le lab (source de vérité). Identifiants de démonstration uniquement.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: netbox
+      POSTGRES_USER: netbox
+      POSTGRES_PASSWORD: netbox
+  redis:
+    image: redis:7-alpine
+  netbox:
+    image: netboxcommunity/netbox:v4.2
+    depends_on: [postgres, redis]
+    ports: ["8000:8080"]
+    environment:
+      DB_HOST: postgres
+      DB_NAME: netbox
+      DB_USER: netbox
+      DB_PASSWORD: netbox
+      REDIS_HOST: redis
+      REDIS_CACHE_HOST: redis
+      SECRET_KEY: "lab-only-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz-0123456789"
+      SKIP_SUPERUSER: "false"
+      SUPERUSER_NAME: admin
+      SUPERUSER_EMAIL: admin@example.com
+      SUPERUSER_PASSWORD: admin
+      SUPERUSER_API_TOKEN: "0123456789abcdef0123456789abcdef01234567"
