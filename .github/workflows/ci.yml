@@ -1,0 +1,37 @@
+name: fabric
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: NetBox -> génération -> déploiement -> tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dépendances
+        run: |
+          pip install pynetbox jinja2 pyyaml requests pytest
+          bash -c "$(curl -sL https://get.containerlab.dev)"
+      - name: Démarrage de NetBox (source de vérité)
+        run: docker compose -f netbox/docker-compose.yml up -d
+      - name: Chargement de l'intention dans NetBox
+        run: python scripts/seed_netbox.py
+      - name: Génération des configs depuis NetBox
+        run: python scripts/render.py && cat build/fabric.clab.yml build/leaf1/frr.conf
+      - name: Déploiement containerlab
+        run: sudo containerlab deploy -t build/fabric.clab.yml
+      - name: Tests (pytest)
+        run: sudo $(which python) -m pytest -v tests
+      - name: Diagnostic
+        if: failure()
+        run: |
+          for n in spine1 leaf1 leaf2; do sudo docker exec clab-evpn-$n vtysh -c "show bgp summary" -c "show evpn vni" || true; done
+          docker compose -f netbox/docker-compose.yml logs netbox | tail -50
+      - name: Nettoyage
+        if: always()
+        run: sudo containerlab destroy -t build/fabric.clab.yml --cleanup || true
