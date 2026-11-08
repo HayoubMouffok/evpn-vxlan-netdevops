@@ -27,11 +27,12 @@ flowchart LR
 
 - **NetBox** : sites, rôles, équipements, interfaces, IP, câbles ; ASN et VNI dans le *config context*.
 - **render.py** : déduit les voisins BGP **à partir des câbles NetBox** (pas de liste codée en dur), génère `frr.conf`, le script VXLAN des leafs et le fichier containerlab.
+- **Tests de recette Robot Framework** (`tests/robot`) : les mêmes vérifications écrites en scénarios lisibles, avec une bibliothèque Python de mots-clés ; le rapport HTML est publié en artefact de la CI.
 - **Tests pytest** : sessions BGP IPv4 et EVPN établies sur les 4 switches, VNI 100 avec VTEP distant, ECMP vers les loopbacks via les 2 spines, ping L2 host1 → host2 à travers le tunnel VXLAN.
 
 ## Stack
 
-NetBox 4 (Docker Compose), Python (pynetbox, Jinja2, pytest), FRRouting 9 (BGP EVPN), Linux VXLAN/bridge, containerlab, GitHub Actions.
+NetBox 4 (Docker Compose), Python (pynetbox, Jinja2, pytest), Robot Framework, FRRouting 9 (BGP EVPN), Linux VXLAN/bridge, containerlab, GitHub Actions.
 
 ## Lancer en local
 
